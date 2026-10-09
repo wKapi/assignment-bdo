@@ -110,7 +110,7 @@ northstar-hr-assistant/
 │   ├── llm/              client.py (mock | anthropic) · prompts.py
 │   └── cli/              app.py · mcp_client.py · flows.py · dates.py
 ├── scripts/              hr_demo.py (HRის დემო)
-└── tests/                9 ფაილი, 143 ტესტი
+└── tests/                
 ```
 
 ## ტექნოლოგიები და არჩევანის დასაბუთება
