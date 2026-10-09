@@ -1,0 +1,20 @@
+#MCP სერვერი
+mcp>=2.3.0,<3
+
+python-docx>=1.1.2
+pypdf>=5.1.0
+
+# RAG
+rank-bm25>=0.2.2
+
+# CLI
+rich>=13.9.0
+
+# LLM პროვაიდერი (mock რეჟიმს არ ჭირდება)
+anthropic>=1.0.0,<2
+
+python-dotenv>=1.0.1
+
+# ტესტები
+pytest>=8.3.0
+pytest-asyncio>=0.24.0

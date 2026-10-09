@@ -1,2 +1,23 @@
-# macOS
+
 .DS_Store
+.env
+.venv/
+venv/
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# ტესტები
+.pytest_cache/
+.coverage
+htmlcov/
+
+*.sqlite
+*.sqlite3
+*.db
+index/
+.cache/
+
+.idea/
+.vscode/
