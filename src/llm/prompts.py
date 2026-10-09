@@ -14,7 +14,7 @@ INTENT_SYSTEM = """\
 დააბრუნე მხოლოდ JSON, ყოველგვარი დამატებითი ტექსტის გარეშე:
 
 {
-  "intent": "policy_question" | "balance" | "create_request" | "other",
+  "intent": "policy_question" | "balance" | "create_request" | "list_requests" | "other",
   "leave_type": "ANNUAL" | "SICK" | "UNPAID" | "BEREAVEMENT" | "STUDY" | "PARENTAL" | null,
   "date_text": "<თარიღების აღმნიშვნელი ფრაგმენტი ტექსტიდან, ან null>",
   "reason": "<მოკლე მიზეზი, თუ თანამშრომელმა თავად დაასახელა, ან null>"
@@ -26,6 +26,8 @@ INTENT_SYSTEM = """\
 - balance — საკუთარი ნაშთის ნახვა („რამდენი დღე დამრჩა?“).
 - create_request — შვებულების მოთხოვნის შექმნა („ავად ვარ“,
   „15 ივნისიდან 19-მდე დავისვენებდი“).
+- list_requests — უკვე არსებული მოთხოვნების ნახვა („მანახე ჩემი
+  მოთხოვნები“, „რა მაქვს განხილვაში?“). ახალს არ ქმნის.
 - other — მისალმება, მადლობა, გაურკვეველი შეტყობინება.
 
 შვებულების სახის განსაზღვრა მიზეზის მიხედვით:

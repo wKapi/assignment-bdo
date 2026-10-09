@@ -9,7 +9,12 @@ from typing import Any
 import pytest
 
 from src.cli.dates import parse_dates
-from src.cli.flows import Session, create_request_flow, show_balance
+from src.cli.flows import (
+    Session,
+    create_request_flow,
+    list_requests_flow,
+    show_balance,
+)
 from src.cli.mcp_client import _clean
 from src.llm.client import LLMClient, detect_leave_type
 from src.mcp_server import tools
@@ -83,7 +88,19 @@ def test_mock_classifies_intents():
     assert llm.classify("რამდენი დღე დამრჩა?").intent == "balance"
     assert llm.classify("როდის მჭირდება სამედიცინო ცნობა?").intent == "policy_question"
     assert llm.classify("ავად ვარ, დღეს ვერ მოვალ").intent == "create_request"
+    assert llm.classify("მანახე შვებულების მოთხოვნები").intent == "list_requests"
     assert llm.classify("გამარჯობა").intent == "other"
+
+
+def test_viewing_requests_is_not_mistaken_for_creating_one():
+    """„მანახე შვებულების მოთხოვნები“ ნახვაა — სახის ხსენება შექმნას არ ნიშნავს."""
+    llm = LLMClient(provider="mock")
+    for text in ("მანახე შვებულების მოთხოვნები", "ჩემი მოთხოვნები",
+                 "რა მაქვს განხილვაში", "მაჩვენე ავადმყოფობის მოთხოვნები"):
+        assert llm.classify(text).intent == "list_requests", text
+
+    # შექმნის ზმნა უპირატესია, თუნდაც ნახვის სიტყვასთან ერთად.
+    assert llm.classify("მინდა შვებულება").intent == "create_request"
 
 
 def test_mock_answer_without_context_says_not_found():
@@ -166,6 +183,29 @@ async def test_balance_flow_separates_approved_and_pending(repo):
     assert "დამტკიცებული 15" in transcript.text
     assert "განხილვაში 3" in transcript.text
     assert "წლიური ბალანსი არ აქვს" in transcript.text  
+
+
+@pytest.mark.asyncio
+async def test_list_requests_flow_shows_status_without_writing(repo):
+    """სია მხოლოდ კითხულობს — ახალი მოთხოვნა არ უნდა შეიქმნას."""
+    mcp = FakeMCP(repo, "E1006")  # საწყის მონაცემებში დამტკიცებულიც აქვს და განხილვაშიც
+    transcript = Transcript([])
+
+    await list_requests_flow(mcp, transcript.say)
+
+    assert "განხილვაში" in transcript.text
+    assert "დამტკიცებული" in transcript.text
+    assert [tool for tool, _ in mcp.calls] == ["list_leave_requests"]
+
+
+@pytest.mark.asyncio
+async def test_list_requests_flow_handles_no_results(repo):
+    mcp = FakeMCP(repo, "E1013")
+    transcript = Transcript([])
+
+    await list_requests_flow(mcp, transcript.say, leave_type="STUDY")
+
+    assert "არ მოიძებნა" in transcript.text
 
 
 @pytest.mark.asyncio

@@ -57,6 +57,10 @@ _QUESTION_KEYWORDS = ("რამდენი", "როდის", "როგო�
 _CREATE_KEYWORDS = ("მინდა", "მსურს", "ვითხოვ", "ავიღებ", "დავისვენებ",
                     "გავფორმებ", "ავად ვარ", "მოვითხოვ", "დამჭირდა")
 
+_LIST_KEYWORDS = ("მანახე", "მაჩვენე", "ჩამომითვალე", "სია", "სიას",
+                  "რა მოთხოვნები", "ჩემი მოთხოვნ", "მოთხოვნები მაქვს",
+                  "გაგზავნილი", "განხილვაში")
+
 _GREETINGS = ("გამარჯობა", "სალამი", "მადლობა", "გმადლობ", "ნახვამდის", "კი",
               "დიახ", "არა")
 
@@ -79,6 +83,10 @@ def _mock_intent(text: str) -> Intent:
 
     asks_question = any(word in lowered for word in _QUESTION_KEYWORDS)
     wants_action = any(word in lowered for word in _CREATE_KEYWORDS)
+
+    # „მანახე მოთხოვნები“ ნახვაა და არა შექმნა — შექმნის ზმნა უპირატესია.
+    if any(word in lowered for word in _LIST_KEYWORDS) and not wants_action:
+        return Intent("list_requests", leave_type)
 
     if wants_action and not asks_question:
         return Intent("create_request", leave_type, date_text=text)
@@ -194,7 +202,8 @@ class LLMClient:
             return _mock_intent(text)  # საიმედო fallback
 
         intent = payload.get("intent")
-        if intent not in {"policy_question", "balance", "create_request", "other"}:
+        if intent not in {"policy_question", "balance", "create_request",
+                          "list_requests", "other"}:
             return _mock_intent(text)
 
         return Intent(

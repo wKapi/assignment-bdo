@@ -102,7 +102,42 @@ async def show_balance(mcp: LeaveMCPClient, say: Say, year: int | None = None) -
             say(f"      {item['note']}")
 
 
-# 3. მოთხოვნის შექმნა
+# 3. არსებული მოთხოვნების ნახვა
+
+
+STATUS_LABELS = {
+    "pending": "განხილვაში",
+    "approved": "დამტკიცებული",
+    "rejected": "უარყოფილი",
+    "cancelled": "გაუქმებული",
+}
+
+
+async def list_requests_flow(
+    mcp: LeaveMCPClient,
+    say: Say,
+    *,
+    leave_type: str | None = None,
+) -> None:
+    """უკვე გაგზავნილი მოთხოვნების ჩვენება — ახალს არ ქმნის."""
+    payload = await mcp.call("list_leave_requests", leave_type=leave_type)
+    requests = payload["requests"]
+
+    if not requests:
+        say("შვებულების მოთხოვნები არ მოიძებნა.")
+        return
+
+    say(f"თქვენი შვებულების მოთხოვნები ({payload['count']}):")
+    for item in requests:
+        status = STATUS_LABELS.get(item["status"], item["status"])
+        say(
+            f"  • #{item['request_id']} · {item['leave_type']} · "
+            f"{item['start_date']} – {item['end_date']} · "
+            f"{item['days']} დღე · {status}"
+        )
+
+
+# 4. მოთხოვნის შექმნა
 
 
 async def _leave_types(mcp: LeaveMCPClient) -> dict[str, dict]:

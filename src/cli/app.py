@@ -14,6 +14,7 @@ from src.cli.flows import (
     Session,
     answer_policy_question,
     create_request_flow,
+    list_requests_flow,
     show_balance,
 )
 from src.cli.mcp_client import LeaveMCPClient, ToolCallError
@@ -29,9 +30,11 @@ HELP = """\
 შემიძლია:
   • ვუპასუხო კითხვებს კომპანიის პოლიტიკებზე (წყაროს მითითებით)
   • გაჩვენოთ თქვენი დარჩენილი შვებულების ნაშთი
+  • გაჩვენოთ უკვე გაგზავნილი მოთხოვნები და მათი სტატუსი
   • შევქმნა შვებულების მოთხოვნა (ANNUAL, SICK, UNPAID)
 
-ბრძანებები: /balance — ნაშთი, /help — დახმარება, /exit — გასვლა
+ბრძანებები: /balance — ნაშთი, /requests — მოთხოვნები,
+            /help — დახმარება, /exit — გასვლა
 """
 
 
@@ -113,11 +116,18 @@ async def run(employee_id: str, role: str) -> int:
                 if message == "/balance":
                     await show_balance(mcp, say)
                     continue
+                if message == "/requests":
+                    await list_requests_flow(mcp, say)
+                    continue
 
                 intent = llm.classify(message)
 
                 if intent.intent == "balance":
                     await show_balance(mcp, say)
+                elif intent.intent == "list_requests":
+                    await list_requests_flow(
+                        mcp, say, leave_type=intent.leave_type
+                    )
                 elif intent.intent == "create_request":
                     await create_request_flow(
                         mcp=mcp,
@@ -153,6 +163,20 @@ def main() -> None:
         help="არხი: employee (ასისტენტი) ან hr (პორტალი)",
     )
     args = parser.parse_args()
+
+    # CLI თანამშრომლის არხია: ყველა ნაკადი საკუთარ მონაცემებზე მუშაობს.
+    # HR როლი სერვერზე employee_id-ს ითხოვს (მუხლი 5.2), რასაც CLI არ კითხულობს,
+    # ამიტომ აქ ვჩერდებით და HR არხზე ვამისამართებთ.
+    if args.role == "hr":
+        console.print(
+            "[yellow]CLI ასისტენტი თანამშრომლის არხია და HR როლით არ ეშვება.[/yellow]\n"
+            "HR ხედავს სხვისი მონაცემებს, რაც კონკრეტულ employee_id-ს მოითხოვს "
+            "(მუხლი 5.2).\n\n"
+            "HR არხისთვის გამოიყენეთ:\n"
+            "  • python -m scripts.hr_demo — HR არხის დემო\n"
+            "  • python -m src.mcp_server.server — MCP სერვერი HR პორტალისთვის"
+        )
+        sys.exit(2)
 
     try:
         sys.exit(asyncio.run(run(args.employee, args.role)))
